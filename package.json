@@ -1,0 +1,19 @@
+{
+  "name": "diff-bin",
+  "version": "1.0.0",
+  "description": "Diff and Patch tools",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redspirit/diff-bin.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/redspirit/diff-bin/issues"
+  },
+  "homepage": "https://github.com/redspirit/diff-bin#readme"
+}

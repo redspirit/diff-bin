@@ -26,49 +26,58 @@ const blocksFromBuffer = (buf) => {
         blocks.push(blockToString(block));
     }
     return blocks;
-}
+};
 
 const start = async () => {
 
     let buf1 = await loadFile('./files/file.bin');
+    // let buf2 = await loadFile('./files/insert.bin');
     let buf2 = await loadFile('./files/change.bin');
 
 
     let target = blocksFromBuffer(buf1);
-    let destination = blocksFromBuffer(buf2);
+    let dest = blocksFromBuffer(buf2);
 
     // console.log(blocks1);
     // console.log(blocks2);
 
-    let offset = 0;
+    let j = 0;
+    let isSearch = false;
+    let targetStartIndex = 0;
+    let destStartIndex = 0;
+    for(let i = 0; i < target.length; i++) {
 
-    target.forEach((block, i) => {
 
-        let j = i + offset;
-        let tmp = [];
+        if(!isSearch && target[i] !== dest[j]) {
 
-        if(block !== destination[j]) {
-            console.log(`Change block ${i}. Old=${block} New=${destination[i]}`);
+            isSearch = true;
+            targetStartIndex = i;
+            destStartIndex = j;
+
+            // пройтись от j+1 до последнего блока dest в поисках совпадения с block[i]
+            // если дойдя до конца не нашлось, то искать так же от j+1 но уже block[i+1]
+
+            // console.log(`Change block ${i}`);
         }
 
-        // while (block !== destination[j])
-        // {
-        //     tmp.push([j, destination[j]]);
-        //
-        //     if(target[i+1] === destination[j]) break;
-        //
-        //     j++;
-        //     offset = j - i;
-        //
-        // }
+        if(isSearch) {
 
-        if(tmp.length > 0) {
-            console.log(tmp);
-            tmp = [];
+            for(let n = destStartIndex + 1; n < dest.length; n++) {
+
+                if(target[i] === dest[n]) {
+                    isSearch = false;
+                    console.log(`Target start=${targetStartIndex} end=${i}. Dest start=${destStartIndex} end=${n}`);
+                    j = n;
+                    break;
+                }
+
+            }
+
         }
 
+        j++;
 
-    });
+    }
 
 
 };

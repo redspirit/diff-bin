@@ -19,42 +19,39 @@ const blockToString = (b) => {
 
 const blocksFromBuffer = (buf) => {
     let blocks = [];
-    let blocksCount = Math.ceil(buf.length / 16);
-    for(let i = 0; i < blocksCount; i++) {
-        let start = i * 16;
-        let block = buf.slice(start, start + 16);
-        blocks.push(blockToString(block));
+    for(let i = 0; i < buf.length; i++) {
+        blocks.push(buf.readUInt8(i));
     }
     return blocks;
 };
 
 const start = async () => {
 
-    let buf1 = await loadFile('./files/file.bin');
-    // let buf2 = await loadFile('./files/insert.bin');
-    let buf2 = await loadFile('./files/change.bin');
+    let buf1 = await loadFile('./files/file.txt');
+    let buf2 = await loadFile('./files/remove.txt');
+    // let buf2 = await loadFile('./files/changed.txt');
 
 
-    let target = blocksFromBuffer(buf1);
-    let dest = blocksFromBuffer(buf2);
+    let newFile = blocksFromBuffer(buf1);
+    let oldFile = blocksFromBuffer(buf2);
 
-    // console.log(blocks1);
-    // console.log(blocks2);
+    // console.log(newFile);
+    // console.log(oldFile);
+
 
     let j = 0;
     let isSearch = false;
-    let targetStartIndex = 0;
-    let destStartIndex = 0;
-    for(let i = 0; i < target.length; i++) {
+    let newStartIndex = 0;
+    let oldStartIndex = 0;
+    for(let i = 0; i < newFile.length; i++) {
 
-
-        if(!isSearch && target[i] !== dest[j]) {
+        if(!isSearch && newFile[i] !== oldFile[j]) {
 
             isSearch = true;
-            targetStartIndex = i;
-            destStartIndex = j;
+            newStartIndex = i;
+            oldStartIndex = j;
 
-            // пройтись от j+1 до последнего блока dest в поисках совпадения с block[i]
+            // пройтись от j+1 до последнего блока oldFile в поисках совпадения с block[i]
             // если дойдя до конца не нашлось, то искать так же от j+1 но уже block[i+1]
 
             // console.log(`Change block ${i}`);
@@ -62,12 +59,14 @@ const start = async () => {
 
         if(isSearch) {
 
-            for(let n = destStartIndex + 1; n < dest.length; n++) {
+            // запускаем цикл для проверку удаления
 
-                if(target[i] === dest[n]) {
+            for (let m = newStartIndex + 1; m < newFile.length; m++) {
+
+                if (newFile[m] === oldFile[oldStartIndex]) {
+                    i = m;
                     isSearch = false;
-                    console.log(`Target start=${targetStartIndex} end=${i}. Dest start=${destStartIndex} end=${n}`);
-                    j = n;
+                    console.log(`Remove start=${newStartIndex} end=${m} `);
                     break;
                 }
 
@@ -75,10 +74,31 @@ const start = async () => {
 
         }
 
+        // if(isSearch) {
+        //
+        //     // is update / insert
+        //
+        //     for(let n = oldStartIndex + 1; n < oldFile.length; n++) {
+        //
+        //         if(newFile[i] === oldFile[n]) {
+        //             isSearch = false;
+        //             console.log(`Target start=${newStartIndex} end=${i}. Dest start=${oldStartIndex} end=${n}`);
+        //             j = n;
+        //             break;
+        //         }
+        //
+        //     }
+        //
+        // }
+
         j++;
 
     }
 
+    if(oldFile.length > j) {
+        // второй файл еще не кончился, значит добавляем остаток к концу
+        console.log(`Target start=${newFile.length} end=${newFile.length}. Dest start=${j} end=${oldFile.length}`);
+    }
 
 };
 start().then();

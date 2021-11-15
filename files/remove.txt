@@ -1,1 +1,1 @@
-The con function does exactly
+The function does exactly

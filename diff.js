@@ -47,16 +47,13 @@ const start = async () => {
 
     let j = 0;
 
-    let newStartIndex = 0;
-    let oldStartIndex = 0;
     for(let i = 0; i < newFile.length; i++) {
 
         if(newFile[i] !== oldFile[j]) {
 
-            newStartIndex = i;
-            oldStartIndex = j;
 
             let res = utils.getCommonArray(newFile, oldFile, i, j);
+            // break;
             if(res.value === null) {
                 // не найдено совпадений вообще
                 console.log('end of file');

@@ -1,1 +1,1 @@
-The con 123 function does exactly
+The concat function does exactly

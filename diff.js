@@ -1,4 +1,5 @@
 const fs = require('fs');
+const utils = require('./utils');
 
 
 const loadFile = (filename) => {
@@ -25,6 +26,10 @@ const blocksFromBuffer = (buf) => {
     return blocks;
 };
 
+const array2String = (arr) => {
+    return Buffer.from(arr).toString('utf8');
+};
+
 const start = async () => {
 
     let buf1 = await loadFile('./files/file.txt');
@@ -38,58 +43,35 @@ const start = async () => {
     // console.log(newFile);
     // console.log(oldFile);
 
+    let patch = [];
 
     let j = 0;
-    let isSearch = false;
+
     let newStartIndex = 0;
     let oldStartIndex = 0;
     for(let i = 0; i < newFile.length; i++) {
 
-        if(!isSearch && newFile[i] !== oldFile[j]) {
+        if(newFile[i] !== oldFile[j]) {
 
-            isSearch = true;
             newStartIndex = i;
             oldStartIndex = j;
 
-            // пройтись от j+1 до последнего блока oldFile в поисках совпадения с block[i]
-            // если дойдя до конца не нашлось, то искать так же от j+1 но уже block[i+1]
+            let res = utils.getCommonArray(newFile, oldFile, i, j);
+            if(res.value === null) {
+                // не найдено совпадений вообще
+                console.log('end of file');
+                break;
+            } else {
 
-            // console.log(`Change block ${i}`);
-        }
+                let content = oldFile.slice(j, res.index2);
 
-        if(isSearch) {
+                patch.push({source: [i, res.index1], content: content});
 
-            // запускаем цикл для проверку удаления
-
-            for (let m = newStartIndex + 1; m < newFile.length; m++) {
-
-                if (newFile[m] === oldFile[oldStartIndex]) {
-                    i = m;
-                    isSearch = false;
-                    console.log(`Remove start=${newStartIndex} end=${m} `);
-                    break;
-                }
-
+                i = res.index1;
+                j = res.index2;
             }
 
         }
-
-        // if(isSearch) {
-        //
-        //     // is update / insert
-        //
-        //     for(let n = oldStartIndex + 1; n < oldFile.length; n++) {
-        //
-        //         if(newFile[i] === oldFile[n]) {
-        //             isSearch = false;
-        //             console.log(`Target start=${newStartIndex} end=${i}. Dest start=${oldStartIndex} end=${n}`);
-        //             j = n;
-        //             break;
-        //         }
-        //
-        //     }
-        //
-        // }
 
         j++;
 
@@ -97,9 +79,48 @@ const start = async () => {
 
     if(oldFile.length > j) {
         // второй файл еще не кончился, значит добавляем остаток к концу
-        console.log(`Target start=${newFile.length} end=${newFile.length}. Dest start=${j} end=${oldFile.length}`);
+        let content = oldFile.slice(j, oldFile.length);
+        patch.push({source: [newFile.length, newFile.length], content: content});
     }
 
+    applyPatch(buf1, patch);
+
 };
+
+const applyPatch = (buffer, patch) => {
+
+
+    // let array = blocksFromBuffer(buffer);
+
+    let start = 0;
+    let chunks = [];
+    let bytes = 0;
+
+    patch.forEach(change => {
+
+        console.log(array2String(change.content));
+
+        let b = buffer.slice(start, change.source[0]);
+        chunks.push(b);
+        if(change.content.length > 0) chunks.push(Buffer.from(change.content));
+
+        start = change.source[1];
+
+        bytes += change.content.length;
+
+    });
+
+    if(start < buffer.length) chunks.push(buffer.slice(start, buffer.length));
+
+    console.log('Patch size =', bytes);
+
+    let newBuffer = Buffer.concat(chunks);
+
+    console.log(newBuffer.toString('utf8'));
+
+};
+
+
+
 start().then();
 

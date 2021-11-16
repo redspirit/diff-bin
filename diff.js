@@ -32,16 +32,9 @@ const array2String = (arr) => {
 
 const start = async () => {
 
-    let buf1 = await loadFile('./files/file.txt');
-    let buf2 = await loadFile('./files/remove.txt');
-    // let buf2 = await loadFile('./files/changed.txt');
+    let newFile = await loadFile('./files/hello.exe');
+    let oldFile = await loadFile('./files/hello_mod.exe');
 
-
-    let newFile = blocksFromBuffer(buf1);
-    let oldFile = blocksFromBuffer(buf2);
-
-    // console.log(newFile);
-    // console.log(oldFile);
 
     let patch = [];
 
@@ -49,7 +42,7 @@ const start = async () => {
 
     for(let i = 0; i < newFile.length; i++) {
 
-        if(newFile[i] !== oldFile[j]) {
+        if(newFile.readUInt8(i) !== oldFile.readUInt8(j)) {
 
 
             let res = utils.getCommonArray(newFile, oldFile, i, j);
@@ -60,9 +53,7 @@ const start = async () => {
                 break;
             } else {
 
-                let content = oldFile.slice(j, res.index2);
-
-                patch.push({source: [i, res.index1], content: content});
+                patch.push({source: [i, res.index1], content: oldFile.slice(j, res.index2)});
 
                 i = res.index1;
                 j = res.index2;
@@ -76,48 +67,39 @@ const start = async () => {
 
     if(oldFile.length > j) {
         // второй файл еще не кончился, значит добавляем остаток к концу
-        let content = oldFile.slice(j, oldFile.length);
-        patch.push({source: [newFile.length, newFile.length], content: content});
+        patch.push({source: [newFile.length, newFile.length], content: oldFile.slice(j, oldFile.length)});
     }
 
-    applyPatch(buf1, patch);
+    createPatchFile('./files/1.patch', patch);
 
 };
 
-const applyPatch = (buffer, patch) => {
+const createPatchFile = (fileName, patches) => {
 
+    let bufferLen = 4;
 
-    // let array = blocksFromBuffer(buffer);
+    patches.forEach(change => {
+        bufferLen += change.content.length;
+        bufferLen += 8;
+    });
 
-    let start = 0;
-    let chunks = [];
-    let bytes = 0;
+    // console.log(patches);
 
-    patch.forEach(change => {
+    let buf = Buffer.alloc(bufferLen);
 
-        console.log(array2String(change.content));
-
-        let b = buffer.slice(start, change.source[0]);
-        chunks.push(b);
-        if(change.content.length > 0) chunks.push(Buffer.from(change.content));
-
-        start = change.source[1];
-
-        bytes += change.content.length;
+    let i = 0;
+    buf.writeUInt32LE(patches.length, i); i += 4;
+    patches.forEach(change => {
+        buf.writeUInt32LE(change.source[0], i);         i += 4;
+        buf.writeUInt32LE(change.source[1], i);         i += 4;
+        buf.writeUInt32LE(change.content.length, i);    i += 4;
+        change.content.copy(buf, i, 0);                 i += change.content.length;
 
     });
 
-    if(start < buffer.length) chunks.push(buffer.slice(start, buffer.length));
-
-    console.log('Patch count =', patch.length);
-    console.log('Patch size =', bytes);
-
-    let newBuffer = Buffer.concat(chunks);
-
-    console.log(newBuffer.toString('utf8'));
+    fs.writeFileSync(fileName, buf);
 
 };
-
 
 
 start().then();

@@ -11,7 +11,7 @@ const compareSequence = (a1, a2, i, j) => {
             continue;
         }
 
-        if(a1[i + n] !== a2[j + n]) {
+        if(a1.readUInt8(i + n) !== a2.readUInt8(j + n)) {
             maxSeqLen = n;
             break;
         }
@@ -43,7 +43,7 @@ const getCommonArray = (a1, a2, start1, start2) => {
 
             // console.log(i, j);
 
-            if(a1[i] === a2[j]) {
+            if(a1.readUInt8(i) === a2.readUInt8(j)) {
                 // console.log('MATCH');
 
                 let w = 1 / ((i + j) - (start1 + start2) + 1) * compareSequence(a1, a2, i, j); // calc weight
@@ -51,7 +51,7 @@ const getCommonArray = (a1, a2, start1, start2) => {
                 // jMax = j - 1;
                 if(w > weight) {
                     weight = w;
-                    resVal = a1[i];
+                    resVal = a1.readUInt8(i);
                     resI = i;
                     resJ = j;
                 }

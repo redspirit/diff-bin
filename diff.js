@@ -109,6 +109,7 @@ const applyPatch = (buffer, patch) => {
 
     if(start < buffer.length) chunks.push(buffer.slice(start, buffer.length));
 
+    console.log('Patch count =', patch.length);
     console.log('Patch size =', bytes);
 
     let newBuffer = Buffer.concat(chunks);

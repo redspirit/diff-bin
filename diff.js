@@ -34,8 +34,8 @@ const array2String = (arr) => {
 
 const start = async () => {
 
-    let newFile = await loadFile('./files/orig.png');
-    let oldFile = await loadFile('./files/change.png');
+    let newFile = await loadFile('./files/orig.bmp');
+    let oldFile = await loadFile('./files/change.bmp');
 
     // let newFile = await loadFile('./files/new.txt');
     // let oldFile = await loadFile('./files/old.txt');
@@ -48,6 +48,7 @@ const start = async () => {
     let j = 0;
 
 
+    // todo очень медленный поиск в bmp, возможно использовать массив байтов, надо тестить
 
     for(let i = 0; i < newFile.length; i++) {
 
@@ -80,7 +81,7 @@ const start = async () => {
         patch.push({source: [newFile.length, newFile.length], content: oldFile.slice(j, oldFile.length)});
     }
 
-    await createPatchFile('./files/pngzip.patch', patch);
+    await createPatchFile('./files/bmp.patch', patch);
 
 };
 
@@ -93,7 +94,7 @@ const createPatchFile = async (fileName, patches) => {
         bufferLen += 12;
     });
 
-    console.log(patches);
+    // console.log(patches);
 
     let buf = Buffer.alloc(bufferLen);
 
@@ -106,7 +107,7 @@ const createPatchFile = async (fileName, patches) => {
         change.content.copy(buf, i, 0);                 i += change.content.length;
     });
 
-    let useZip = true;
+    let useZip = false;
 
     if(useZip) {
         let zip = new Zip();

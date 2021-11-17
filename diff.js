@@ -34,14 +34,13 @@ const array2String = (arr) => {
 
 const start = async () => {
 
-    let newFile = await loadFile('./files/orig.bmp');
-    let oldFile = await loadFile('./files/change.bmp');
+    let newFile = new Uint8Array(await loadFile('./files/old.txt'));
+    let oldFile = new Uint8Array(await loadFile('./files/new.txt'));
 
-    // let newFile = await loadFile('./files/new.txt');
-    // let oldFile = await loadFile('./files/old.txt');
 
-    let crc = CRC32.buf(oldFile);
+    let crc = CRC32.buf(newFile);
     console.log('CRC32 of final file', crc);
+
 
     let patch = [];
 
@@ -53,18 +52,21 @@ const start = async () => {
     for(let i = 0; i < newFile.length; i++) {
 
         // todo ошибка если финальный файл сильно меньше исходного
-        if(newFile.readUInt8(i) !== oldFile.readUInt8(j)) {
+        if(newFile[i] !== oldFile[j]) {
 
 
-            let res = utils.getCommonArray(newFile, oldFile, i, j);
+            let res = utils.getCommonArray2(newFile, oldFile, i, j);
             // break;
-            if(res.value === null) {
+            if(!res.success) {
                 // не найдено совпадений вообще
                 console.log('end of file');
                 break;
             } else {
 
-                patch.push({source: [i, res.index1], content: oldFile.slice(j, res.index2)});
+                patch.push({
+                    source: [i, res.index1],
+                    content: Buffer.from(oldFile.slice(j, res.index2).buffer)
+                });
 
                 i = res.index1;
                 j = res.index2;
@@ -78,10 +80,16 @@ const start = async () => {
 
     if(oldFile.length > j) {
         // второй файл еще не кончился, значит добавляем остаток к концу
-        patch.push({source: [newFile.length, newFile.length], content: oldFile.slice(j, oldFile.length)});
+        patch.push({
+            source: [newFile.length, newFile.length],
+            content: Buffer.from(oldFile.slice(j, oldFile.length).buffer)
+        });
     }
 
-    await createPatchFile('./files/bmp.patch', patch);
+
+    console.log(patch);
+
+    await createPatchFile('./files/1.patch', patch);
 
 };
 

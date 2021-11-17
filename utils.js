@@ -12,7 +12,7 @@ const compareSequence = (a1, a2, i, j) => {
             continue;
         }
 
-        if(a1.readUInt8(i + n) !== a2.readUInt8(j + n)) {
+        if(a1[i + n] !== a2[j + n]) {
             maxSeqLen = n;
             break;
         }
@@ -33,6 +33,8 @@ const getCommonArray = (a1, a2, start1, start2) => {
 
     // console.log(`"${String.fromCharCode(a1[start1])}", "${String.fromCharCode(a2[start2])}"`);
 
+    console.log('>>', start1, a1.length);
+
     for(let i = start1; i < a1.length; i++) {
 
         if(i - start1 >= weight) {
@@ -44,7 +46,7 @@ const getCommonArray = (a1, a2, start1, start2) => {
 
             // console.log(i, j);
 
-            if(a1.readUInt8(i) === a2.readUInt8(j)) {
+            if(a1[i] === a2[j]) {
                 // console.log('MATCH');
 
                 let w = 1 / ((i + j) - (start1 + start2) + 1) * compareSequence(a1, a2, i, j); // calc weight
@@ -52,7 +54,7 @@ const getCommonArray = (a1, a2, start1, start2) => {
                 // jMax = j - 1;
                 if(w > weight) {
                     weight = w;
-                    resVal = a1.readUInt8(i);
+                    resVal = a1[i];
                     resI = i;
                     resJ = j;
                 }
@@ -76,6 +78,50 @@ const getCommonArray = (a1, a2, start1, start2) => {
 
 };
 
+const getCommonArray2 = (a1, a2, start1, start2) => {
+
+    let seqLen = 5;
+
+    for(let i = start1; i < a1.length; i++) {
+
+
+        for(let j = start2; j <= a2.length; j++) {
+
+            if(a1[i] === a2[j]) {
+
+                let isEqual = true;
+                for(let n = 1; n <= seqLen; n++) {
+                    if(a1[i + n] !== a2[j + n]) {
+                        isEqual = false;
+                        break;
+                    }
+                }
+
+                if(isEqual) {
+                    console.log(`Final. i = ${i}, j = ${j}, value = ${String.fromCharCode(a1[i])}`);
+
+                    return {
+                        success: true,
+                        index1: i,
+                        index2: j
+                    }
+                }
+
+            }
+
+        }
+
+    }
+
+    return {
+        success: false,
+        index1: 0,
+        index2: 0,
+    }
+
+};
+
 module.exports = {
-    getCommonArray
+    getCommonArray,
+    getCommonArray2,
 };

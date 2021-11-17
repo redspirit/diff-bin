@@ -1,7 +1,8 @@
 
 const compareSequence = (a1, a2, i, j) => {
 
-    let maxSeqLen = 100;
+    // todo тут какой-то баг, число ниже не должно портить результат если увеличивается
+    let maxSeqLen = 10;
 
     for(let n = 1; n < maxSeqLen; n++) {
 

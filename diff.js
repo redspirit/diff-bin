@@ -1,6 +1,7 @@
 const fs = require('fs');
 const utils = require('./utils');
 const Zip = require('adm-zip');
+const CRC32 = require('crc-32');
 
 
 const loadFile = (filename) => {
@@ -33,19 +34,24 @@ const array2String = (arr) => {
 
 const start = async () => {
 
-    // let newFile = await loadFile('./files/orig.png');
-    // let oldFile = await loadFile('./files/change.png');
+    let newFile = await loadFile('./files/orig.png');
+    let oldFile = await loadFile('./files/change.png');
 
-    let newFile = await loadFile('./files/new.txt');
-    let oldFile = await loadFile('./files/old.txt');
+    // let newFile = await loadFile('./files/new.txt');
+    // let oldFile = await loadFile('./files/old.txt');
 
+    let crc = CRC32.buf(oldFile);
+    console.log('CRC32 of final file', crc);
 
     let patch = [];
 
     let j = 0;
 
+
+
     for(let i = 0; i < newFile.length; i++) {
 
+        // todo ошибка если финальный файл сильно меньше исходного
         if(newFile.readUInt8(i) !== oldFile.readUInt8(j)) {
 
 
@@ -74,7 +80,7 @@ const start = async () => {
         patch.push({source: [newFile.length, newFile.length], content: oldFile.slice(j, oldFile.length)});
     }
 
-    await createPatchFile('./files/png.patch', patch);
+    await createPatchFile('./files/pngzip.patch', patch);
 
 };
 
@@ -84,10 +90,10 @@ const createPatchFile = async (fileName, patches) => {
 
     patches.forEach(change => {
         bufferLen += change.content.length;
-        bufferLen += 8;
+        bufferLen += 12;
     });
 
-    // console.log(patches);
+    console.log(patches);
 
     let buf = Buffer.alloc(bufferLen);
 
@@ -98,16 +104,18 @@ const createPatchFile = async (fileName, patches) => {
         buf.writeUInt32LE(change.source[1], i);         i += 4;
         buf.writeUInt32LE(change.content.length, i);    i += 4;
         change.content.copy(buf, i, 0);                 i += change.content.length;
-
     });
 
-    let zip = new Zip();
+    let useZip = true;
 
-    zip.addFile('file', buf);
-
-    let zipBuf = await zip.toBuffer();
-
-    fs.writeFileSync(fileName, zipBuf);
+    if(useZip) {
+        let zip = new Zip();
+        zip.addFile('file', buf);
+        let zipBuf = await zip.toBuffer();
+        fs.writeFileSync(fileName, zipBuf);
+    } else {
+        fs.writeFileSync(fileName, buf);
+    }
 
 };
 

@@ -1,4 +1,6 @@
 const fs = require('fs');
+const Zip = require('adm-zip');
+const CRC32 = require('crc-32');
 
 const loadFile = (filename) => {
 
@@ -13,8 +15,17 @@ const loadFile = (filename) => {
 
 const start = async (patchFile, originalFile, newFile) => {
 
-    let patchBuf = await loadFile(patchFile);
     let originalBuf = await loadFile(originalFile);
+    let patchBuf = null;
+
+    let useZip = false;
+
+    if(useZip) {
+        let zip = new Zip(patchFile);
+        patchBuf = zip.readFile('file');
+    } else {
+        patchBuf = await loadFile(patchFile);
+    }
 
 
     // parse patch file
@@ -31,6 +42,7 @@ const start = async (patchFile, originalFile, newFile) => {
         let content = Buffer.alloc(len);
         patchBuf.copy(content, 0, i, i + len); i += len;
 
+        // console.log(content.toString('utf8'));
 
         chunks.push(originalBuf.slice(start, v1));
         if(len > 0) chunks.push(content);
@@ -49,43 +61,9 @@ const start = async (patchFile, originalFile, newFile) => {
 
     fs.writeFileSync(newFile, newBuffer);
 
-};
-
-
-const applyPatch = (buffer, patch) => {
-
-
-    // let array = blocksFromBuffer(buffer);
-
-    let start = 0;
-    let chunks = [];
-    let bytes = 0;
-
-    patch.forEach(change => {
-
-        // console.log(array2String(change.content));
-
-        let b = buffer.slice(start, change.source[0]);
-        chunks.push(b);
-        if(change.content.length > 0) chunks.push(Buffer.from(change.content));
-
-        start = change.source[1];
-
-        bytes += change.content.length;
-
-    });
-
-    if(start < buffer.length) chunks.push(buffer.slice(start, buffer.length));
-
-    console.log('Patch count =', patch.length);
-    console.log('Patch size =', bytes);
-
-    let newBuffer = Buffer.concat(chunks);
-
-    // console.log(newBuffer.toString('utf8'));
-
-    // fs.writeFileSync('./files/123.exe', newBuffer);
+    let crc = CRC32.buf(newBuffer);
+    console.log('CRC32 of final file', crc);
 
 };
 
-start('./files/1.patch', './files/hello.exe', './files/new.exe').then();
+start('./files/png.patch', './files/orig.png', './files/res.png').then();

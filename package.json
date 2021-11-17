@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/redspirit/diff-bin#readme",
   "dependencies": {
-    "adm-zip": "^0.5.9"
+    "adm-zip": "^0.5.9",
+    "crc-32": "^1.2.0"
   }
 }

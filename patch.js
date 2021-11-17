@@ -18,7 +18,9 @@ const start = async (patchFile, originalFile, newFile) => {
 
 
     // parse patch file
-    let patches = [];
+    let start = 0;
+    let chunks = [];
+    // let patches = [];
     let count = patchBuf.readUInt32LE(0);
     let i = 4;
     for(let n = 0; n < count; n++) {
@@ -26,18 +28,26 @@ const start = async (patchFile, originalFile, newFile) => {
         let v1 = patchBuf.readUInt32LE(i); i += 4;
         let v2 = patchBuf.readUInt32LE(i); i += 4;
         let len = patchBuf.readUInt32LE(i); i += 4;
-        let content = Buffer.alloc(len); i += len;
-        patchBuf.copy(content, 0, i, i + len);
+        let content = Buffer.alloc(len);
+        patchBuf.copy(content, 0, i, i + len); i += len;
 
-        patches.push({
-            source: [v1, v2],
-            content: content
-        });
+
+        chunks.push(originalBuf.slice(start, v1));
+        if(len > 0) chunks.push(content);
+        start = v2;
+
+
+        // patches.push({
+        //     source: [v1, v2],
+        //     content: content
+        // });
 
     }
+    if(start < originalBuf.length) chunks.push(originalBuf.slice(start, originalBuf.length));
 
-    console.log(patches);
+    let newBuffer = Buffer.concat(chunks);
 
+    fs.writeFileSync(newFile, newBuffer);
 
 };
 
@@ -78,4 +88,4 @@ const applyPatch = (buffer, patch) => {
 
 };
 
-start('./files/1.patch', './files/hello.exe', '').then();
+start('./files/1.patch', './files/hello.exe', './files/new.exe').then();

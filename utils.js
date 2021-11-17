@@ -1,7 +1,7 @@
 
 const compareSequence = (a1, a2, i, j) => {
 
-    let maxSeqLen = 10;
+    let maxSeqLen = 100;
 
     for(let n = 1; n < maxSeqLen; n++) {
 

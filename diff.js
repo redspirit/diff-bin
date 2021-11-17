@@ -1,5 +1,6 @@
 const fs = require('fs');
 const utils = require('./utils');
+const Zip = require('adm-zip');
 
 
 const loadFile = (filename) => {
@@ -32,8 +33,11 @@ const array2String = (arr) => {
 
 const start = async () => {
 
-    let newFile = await loadFile('./files/hello.exe');
-    let oldFile = await loadFile('./files/hello_mod.exe');
+    // let newFile = await loadFile('./files/orig.png');
+    // let oldFile = await loadFile('./files/change.png');
+
+    let newFile = await loadFile('./files/new.txt');
+    let oldFile = await loadFile('./files/old.txt');
 
 
     let patch = [];
@@ -70,11 +74,11 @@ const start = async () => {
         patch.push({source: [newFile.length, newFile.length], content: oldFile.slice(j, oldFile.length)});
     }
 
-    createPatchFile('./files/1.patch', patch);
+    await createPatchFile('./files/png.patch', patch);
 
 };
 
-const createPatchFile = (fileName, patches) => {
+const createPatchFile = async (fileName, patches) => {
 
     let bufferLen = 4;
 
@@ -97,7 +101,13 @@ const createPatchFile = (fileName, patches) => {
 
     });
 
-    fs.writeFileSync(fileName, buf);
+    let zip = new Zip();
+
+    zip.addFile('file', buf);
+
+    let zipBuf = await zip.toBuffer();
+
+    fs.writeFileSync(fileName, zipBuf);
 
 };
 

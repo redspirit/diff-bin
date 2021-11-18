@@ -32,45 +32,31 @@ const array2String = (arr) => {
     return Buffer.from(arr).toString('utf8');
 };
 
-const start = async () => {
+const diff = async (oldFilePath, newFilePath, patchFilePath, isZip = false) => {
 
-    let newFile = new Uint8Array(await loadFile('./files/old.txt'));
-    let oldFile = new Uint8Array(await loadFile('./files/new.txt'));
-
+    let oldFile = new Uint8Array(await loadFile(oldFilePath));
+    let newFile = new Uint8Array(await loadFile(newFilePath));
 
     let crc = CRC32.buf(newFile);
-    console.log('CRC32 of final file', crc);
-
 
     let patch = [];
-
     let j = 0;
 
 
-    // todo очень медленный поиск в bmp, возможно использовать массив байтов, надо тестить
-
-    for(let i = 0; i < newFile.length; i++) {
+    for(let i = 0; i < oldFile.length; i++) {
 
         // todo ошибка если финальный файл сильно меньше исходного
-        if(newFile[i] !== oldFile[j]) {
+        if(oldFile[i] !== newFile[j]) {
 
+            let res = utils.findSequence(oldFile, newFile, i, j);
 
-            let res = utils.getCommonArray2(newFile, oldFile, i, j);
-            // break;
-            if(!res.success) {
-                // не найдено совпадений вообще
-                console.log('end of file');
-                break;
-            } else {
+            patch.push({
+                source: [i, res.index1],
+                content: Buffer.from(newFile.slice(j, res.index2).buffer)
+            });
 
-                patch.push({
-                    source: [i, res.index1],
-                    content: Buffer.from(oldFile.slice(j, res.index2).buffer)
-                });
-
-                i = res.index1;
-                j = res.index2;
-            }
+            i = res.index1;
+            j = res.index2;
 
         }
 
@@ -78,22 +64,31 @@ const start = async () => {
 
     }
 
-    if(oldFile.length > j) {
+    if(newFile.length > j) {
         // второй файл еще не кончился, значит добавляем остаток к концу
+        // console.log('get the end');
         patch.push({
-            source: [newFile.length, newFile.length],
-            content: Buffer.from(oldFile.slice(j, oldFile.length).buffer)
+            source: [oldFile.length, oldFile.length],
+            content: Buffer.from(newFile.slice(j, newFile.length).buffer)
         });
     }
 
 
-    console.log(patch);
+    // console.log(patch);
 
-    await createPatchFile('./files/1.patch', patch);
+    let patchBuffer = await createPatchFile(patchFilePath, patch, isZip);
+
+    // return stat info
+    return {
+        crc32: crc,
+        changesCount: patch.length,
+        changesSize: patch.reduce((a, c) => a + c.content.length, 0),
+        patchFileSize: patchBuffer.length,
+    }
 
 };
 
-const createPatchFile = async (fileName, patches) => {
+const createPatchFile = async (fileName, patches, isZip) => {
 
     let bufferLen = 4;
 
@@ -115,19 +110,20 @@ const createPatchFile = async (fileName, patches) => {
         change.content.copy(buf, i, 0);                 i += change.content.length;
     });
 
-    let useZip = false;
-
-    if(useZip) {
+    if(isZip) {
         let zip = new Zip();
         zip.addFile('file', buf);
         let zipBuf = await zip.toBuffer();
         fs.writeFileSync(fileName, zipBuf);
+        return zipBuf;
     } else {
         fs.writeFileSync(fileName, buf);
+        return buf;
     }
 
 };
 
+module.exports = diff;
 
-start().then();
+// diff('./files/old.txt', './files/new.txt', './files/1.patch', false).then();
 

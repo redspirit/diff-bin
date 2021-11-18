@@ -13,18 +13,16 @@ const loadFile = (filename) => {
 
 };
 
-const start = async (patchFile, originalFile, newFile) => {
+const patch = async (oldFilePath, patchFilePath, newFilePath, isZip = false) => {
 
-    let originalBuf = await loadFile(originalFile);
+    let originalBuf = await loadFile(oldFilePath);
     let patchBuf = null;
 
-    let useZip = false;
-
-    if(useZip) {
-        let zip = new Zip(patchFile);
+    if(isZip) {
+        let zip = new Zip(patchFilePath);
         patchBuf = zip.readFile('file');
     } else {
-        patchBuf = await loadFile(patchFile);
+        patchBuf = await loadFile(patchFilePath);
     }
 
 
@@ -59,11 +57,14 @@ const start = async (patchFile, originalFile, newFile) => {
 
     let newBuffer = Buffer.concat(chunks);
 
-    fs.writeFileSync(newFile, newBuffer);
+    fs.writeFileSync(newFilePath, newBuffer);
 
-    let crc = CRC32.buf(newBuffer);
-    console.log('CRC32 of final file', crc);
+    return {
+        crc32: CRC32.buf(newBuffer),
+    }
 
 };
 
-start('./files/png.patch', './files/orig.png', './files/res.png').then();
+module.exports = patch;
+
+// patch('./files/old.txt', './files/1.patch', './files/result.txt').then();

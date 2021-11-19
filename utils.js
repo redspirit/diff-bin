@@ -1,7 +1,5 @@
 
-const findSequence = (a1, a2, start1, start2) => {
-
-    let seqLen = 10;
+const findSequence = (a1, a2, start1, start2, seqLen = 8) => {
 
     for(let i = start1; i < a1.length; i++) {
 
@@ -19,12 +17,13 @@ const findSequence = (a1, a2, start1, start2) => {
                 }
 
                 if(isEqual) {
-                    // console.log(`Final. i = ${i}, j = ${j}, value = ${String.fromCharCode(a1[i])}`);
+                    // console.log(`>> i = ${i}, j = ${j}, value = ${String.fromCharCode(a1[i])}`);
+                    console.log(`>> i = ${i}, j = ${j}, value = ${a1[i]}`);
 
                     return {
                         isFinal: false,
                         index1: i,
-                        index2: j
+                        index2: j,
                     }
                 }
 

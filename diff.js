@@ -74,7 +74,7 @@ const diff = async (oldFilePath, newFilePath, patchFilePath, isZip = false) => {
     }
 
 
-    // console.log(patch);
+    console.log(patch);
 
     let patchBuffer = await createPatchFile(patchFilePath, patch, isZip);
 

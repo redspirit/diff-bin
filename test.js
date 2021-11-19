@@ -1,6 +1,7 @@
 
 const diff = require('./diff');
 const patch = require('./patch');
+const utils = require('./utils');
 
 
 
@@ -10,7 +11,7 @@ const start = async () => {
 
     console.log(`Diff begin...`);
 
-    let stat = await diff('./files/hello.exe', './files/hello_mod.exe', './files/1.patch', false);
+    let stat = await diff('./files/old.txt', './files/new.txt', './files/1.patch', false);
 
     let sec = (Date.now() - startDate) / 1000;
 
@@ -25,7 +26,7 @@ const start = async () => {
     startDate = Date.now();
     console.log(`Patching begin...`);
 
-    let stat2 = await patch('./files/hello.exe', './files/1.patch', './files/hello_RES.exe', false);
+    let stat2 = await patch('./files/old.txt', './files/1.patch', './files/result.txt', false);
 
     sec = (Date.now() - startDate) / 1000;
     console.log(`Patching done...`);
@@ -35,6 +36,22 @@ const start = async () => {
 
 };
 
-start().then();
+const start2 = async () => {
+
+    let a1 =    'My na1me is Sp4irit6'.split('');
+    let a2 = 'First name 3is S*pi5rit'.split('');
+
+    // console.log(a1, a2);
+
+    let res = utils.findSequence(a1, a2, 0, 0, 4);
+
+    console.log(res);
+
+
+
+};
+
+// start().then();
+start2().then();
 
 
